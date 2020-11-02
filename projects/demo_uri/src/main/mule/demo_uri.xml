@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="eed473d5-1115-4f45-a1c4-bb515831fbe9" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="3f348d71-146c-4b6d-8c0f-91b25ccb6f5d" >
+		<file:connection workingDir="E:\Mule4 Preparation" />
+	</file:config>
+	<flow name="demo_uriFlow" doc:id="035b97ec-3a88-4ece-bd18-27a361cd4508" >
+		<http:listener doc:name="Listener" doc:id="97effb91-df45-4046-8a66-364c429a587b" config-ref="HTTP_Listener_config" path="/test/{id}" outputMimeType="application/json" allowedMethods="GET"/>
+		<logger level="INFO" doc:name="Logger" doc:id="03b3dfea-0435-4201-884d-b340ffa26a15" message="#[message.attributes.uriParams.id]"/>
+		<ee:transform doc:name="Transform Message" doc:id="d74411d0-d3dc-47c3-8d3f-d6e8d330d8d2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var input_val = 21
+var table_loop = [1,2,3,4,5,6,7,8,9,10]
+
+---
+
+if(input_val >20 and input_val <100)(
+table: table_loop map {
+(input_val ++ " * "++ $) : 21*$
+}) else (
+"Please try with two digit number greater than 20")
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d94ba7ab-edb1-4619-b9c0-2c7779395d41" message="#[payload]"/>
+		<file:write doc:name="Write" doc:id="495a82ee-04db-4ea0-86c6-16d17f436d3e" config-ref="File_Config" path="response.json" mode="APPEND">
+			<file:content ><![CDATA[#[%dw 2.0
+output application/json
+var input_val = 22
+var table_loop = [1,2,3,4,5,6,7,8,9,10]
+
+---
+
+if(input_val >20 and input_val <100)(
+table: table_loop map {
+(input_val ++ " * "++ $) : 21*$
+}) else (
+"Please try with two digit number greater than 20")]]]></file:content>
+		</file:write>
+	</flow>
+</mule>
